@@ -1,0 +1,13 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80">
+  <defs>
+    <linearGradient id="gradLogo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="50%" stop-color="#23c55e"/>
+      <stop offset="100%" stop-color="#ffd200"/>
+    </linearGradient>
+  </defs>
+  <text x="0" y="55" font-family="Montserrat, sans-serif" font-size="52" font-weight="700" fill="url(#gradLogo)" stroke="#00000022" stroke-width="1">
+    AITERMI
+  </text>
+  <polygon points="220,20 240,40 220,60" fill="#ffd200"/>
+</svg>

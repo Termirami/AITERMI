@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>בוט ייעוץ עסקי</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ui-green:#23c55e;
+  --bubble-user:#e8ffe8;
+  --bubble-bot:#e7f2ff;
+  --chat-bg:#ffffff;
+  --text:#0f172a;
+  --shadow:0 10px 30px rgba(0,0,0,.25);
+}
+html,body{height:100%;margin:0;font-family:'Montserrat', sans-serif;color:var(--text);}
+body{
+  background:
+    radial-gradient(1200px 800px at 0% -10%, rgba(35,197,94,.7), transparent 65%),
+    radial-gradient(1200px 800px at 100% 0%, rgba(143,0,255,.6), transparent 60%),
+    radial-gradient(1000px 700px at 50% 110%, rgba(255,210,0,.6), transparent 60%),
+    linear-gradient(135deg, #00d4ff 0%, #00ffa3 35%, #ffe66d 70%, #ff7a59 100%);
+  background-size: 120% 120%;
+  animation: bgShift 18s ease-in-out infinite alternate;
+  overflow:hidden;
+}
+@keyframes bgShift{
+  from{ background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%; }
+  to  { background-position: 20% -10%, 80% 10%, 40% 90%, 100% 100%; }
+}
+.layer{
+  position:relative; z-index:2; min-height:100%; display:flex;
+  flex-direction:column; align-items:center; padding:28px 16px 24px; gap:18px;
+}
+.logo-wrap{margin-top:10px;display:flex;flex-direction:column;align-items:center;}
+.logo{width:min(92vw,320px);height:auto;}
+.subtitle{
+  font-size:clamp(22px,4vw,32px);
+  font-weight:700;
+  color:#a855f7;
+  text-shadow:0 0 12px rgba(168,85,247,.8),0 0 18px rgba(0,0,0,.2);
+  margin-top:6px;
+  text-align:center;
+}
+.chat{
+  width:min(92vw,760px); background:var(--chat-bg);
+  border-radius:18px; box-shadow: var(--shadow); display:flex;
+  flex-direction:column; padding:18px 16px 14px;
+}
+.log{height:360px; overflow:auto; padding:6px 2px;}
+.bubble{
+  max-width:78%; border-radius:14px; padding:10px 12px; margin:8px 0;
+  line-height:1.45; word-wrap:break-word; white-space:pre-wrap;
+}
+.bubble.user{margin-inline-start:auto; background:var(--bubble-user);}
+.bubble.bot{margin-inline-end:auto; background:var(--bubble-bot);}
+.input-row{margin-top:10px; display:flex; gap:8px; align-items:center;}
+.text-in{
+  flex:1; border:1px solid #d1d5db; border-radius:12px;
+  padding:12px 14px; font-size:16px; background:#fff; color:var(--text);
+}
+.icon-btn{width:48px;height:48px;display:grid;place-items:center;border:none;border-radius:12px;cursor:pointer;color:#fff;}
+.btn-voice{background: linear-gradient(135deg, #ff4e88, #8f00ff);}
+.btn-send{background: linear-gradient(135deg, var(--ui-green), #14b8a6);}
+.icon{width:22px;height:22px;fill:#fff;}
+.motif{position:absolute;opacity:.25;z-index:1;pointer-events:none; animation:floatMotif 12s linear infinite;}
+.m1{top:5%; left:5%; width:160px;}
+.m2{bottom:8%; right:8%; width:180px;}
+.m3{top:25%; right:20%; width:140px;}
+@keyframes floatMotif{
+  0%{transform:translateY(0px);}
+  50%{transform:translateY(-20px);}
+  100%{transform:translateY(0px);}
+}
+</style>
+</head>
+<body>
+<!-- מוטיבים זזים ברקע -->
+<svg class="motif m1" viewBox="0 0 120 120"><rect x="10" y="60" width="18" height="45" fill="#8f00ff"/><rect x="38" y="45" width="18" height="60" fill="#00d4ff"/><rect x="66" y="30" width="18" height="75" fill="#23c55e"/><rect x="94" y="18" width="18" height="87" fill="#ffd200"/></svg>
+<svg class="motif m2" viewBox="0 0 140 140"><circle cx="70" cy="70" r="54" fill="#ffd200"/></svg>
+<svg class="motif m3" viewBox="0 0 160 160"><polyline points="15,120 60,80 95,95 135,40" fill="none" stroke="#23c55e" stroke-width="10"/></svg>
+
+<div class="layer">
+  <div class="logo-wrap">
+    <!-- לוגו מקובץ נפרד -->
+    <img class="logo" src="AITERMI-logo.svg" alt="AITERMI Logo"/>
+    <div class="subtitle">בוט ייעוץ עסקי</div>
+  </div>
+  <div class="chat">
+    <div class="log" id="chatLog"></div>
+    <div class="input-row">
+      <input type="text" class="text-in" id="userInput" placeholder="הקלד הודעה..."/>
+      <button class="icon-btn btn-voice" id="voiceBtn">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2zM12 17v4m-4 0h8"/></svg>
+      </button>
+      <button class="icon-btn btn-send" id="sendBtn">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 12l18-9-7 9 7 9-18-9z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const log=document.getElementById('chatLog');
+const input=document.getElementById('userInput');
+document.getElementById('sendBtn').onclick=sendMessage;
+input.addEventListener('keypress',e=>{if(e.key==="Enter")sendMessage();});
+
+function sendMessage(){
+  const text=input.value.trim(); 
+  if(!text) return;
+  appendBubble(text,'user'); 
+  input.value='';
+  setTimeout(()=>appendBubble("תשובת בוט לדוגמה...","bot"),800);
+}
+function appendBubble(text,type){
+  const b=document.createElement('div');
+  b.className='bubble '+type;
+  b.textContent=text;
+  log.appendChild(b);
+  log.scrollTop=log.scrollHeight;
+}
+</script>
+</body>
+</html>
