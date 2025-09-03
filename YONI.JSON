@@ -1,0 +1,103 @@
+﻿{
+  "name": "AI Business Assistant Legacy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "start-bot"
+      },
+      "name": "Webhook Start Bot",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "mode": "binary",
+        "binaryProperty": "data",
+        "text": "שלום יוני! אני היועצת העסקית שלך. כאן כדי לספק לך עזרה ניהולית לעסק שלך."
+      },
+      "name": "TTS Intro",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "user-message"
+      },
+      "name": "Webhook User Message",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 600]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer YOUR_OPENAI_API_KEY"
+          }
+        ],
+        "bodyParametersJson": "={\"model\": \"gpt-3.5-turbo\", \"messages\": [{\"role\": \"system\", \"content\": \"אתה יועץ עסקי אישי. תשובות קצרות, פרקטיות ומקצועיות.\"}, {\"role\": \"user\", \"content\": {{$json[\"body\"]}}}]}"
+      },
+      "name": "OpenAI HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [500, 600]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "mode": "binary",
+        "binaryProperty": "data",
+        "text": "={{$node[\"OpenAI HTTP Request\"].json[\"choices\"][0][\"message\"][\"content\"]}}"
+      },
+      "name": "TTS User Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [700, 600]
+    },
+    {
+      "parameters": {
+        "responseMode": "lastNode",
+        "responseDataType": "binary"
+      },
+      "name": "Respond to Webhook Intro",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "responseMode": "lastNode",
+        "responseDataType": "binary"
+      },
+      "name": "Respond to Webhook User",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 600]
+    }
+  ],
+  "connections": {
+    "Webhook Start Bot": {
+      "main": [
+        [
+          {"node": "TTS Intro", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "TTS Intro": {"main": [[{"node": "Respond to Webhook Intro", "type": "main", "index": 0}]]},
+    "Webhook User Message": {"main": [[{"node": "OpenAI HTTP Request", "type": "main", "index": 0}]]},
+    "OpenAI HTTP Request": {"main": [[{"node": "TTS User Response", "type": "main", "index": 0}]]},
+    "TTS User Response": {"main": [[{"node": "Respond to Webhook User", "type": "main", "index": 0}]]}
+  }
+}
