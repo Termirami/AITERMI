@@ -83,7 +83,6 @@ body{
 
 <div class="layer">
   <div class="logo-wrap">
-    <!-- לוגו מקובץ נפרד -->
     <img class="logo" src="AITERMI-logo.svg" alt="AITERMI Logo"/>
     <div class="subtitle">בוט ייעוץ עסקי</div>
   </div>
@@ -104,16 +103,41 @@ body{
 <script>
 const log=document.getElementById('chatLog');
 const input=document.getElementById('userInput');
+const webhookURL="https://YOUR-N8N-WEBHOOK-URL"; // <-- החלף כאן לכתובת ה-Webhook שלך
+
 document.getElementById('sendBtn').onclick=sendMessage;
 input.addEventListener('keypress',e=>{if(e.key==="Enter")sendMessage();});
+
+// צ’ט קולי בסיסי
+const recognition = ('webkitSpeechRecognition' in window) ? new webkitSpeechRecognition() : null;
+if(recognition){
+  recognition.lang='he-IL';
+  recognition.continuous=false;
+  recognition.interimResults=false;
+  document.getElementById('voiceBtn').onclick=()=>{recognition.start();}
+  recognition.onresult=function(e){
+    input.value=e.results[0][0].transcript;
+    sendMessage();
+  }
+}
 
 function sendMessage(){
   const text=input.value.trim(); 
   if(!text) return;
   appendBubble(text,'user'); 
   input.value='';
-  setTimeout(()=>appendBubble("תשובת בוט לדוגמה...","bot"),800);
+
+  // שליחה ל-n8n
+  fetch(webhookURL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:text})
+  })
+  .then(res=>res.json())
+  .then(data=>appendBubble(data.reply||"תשובת בוט לא זמינה","bot"))
+  .catch(err=>appendBubble("שגיאה בשרת","bot"));
 }
+
 function appendBubble(text,type){
   const b=document.createElement('div');
   b.className='bubble '+type;
