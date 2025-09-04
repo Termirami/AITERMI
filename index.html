@@ -146,5 +146,45 @@ function appendBubble(text,type){
   log.scrollTop=log.scrollHeight;
 }
 </script>
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    // קריאה ל-Webhook ב-n8n ברגע שהצ'אט נטען
+    const response = await fetch("https://rami.aitermi-agents.com/webhook/CHATBOT", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ event: "page_loaded" })
+    });
+
+    const data = await response.json();
+
+    // אם יש טקסט מהבוט – להציג בצ'אט
+    if (data.text) {
+      addMessageToChat("bot", data.text);
+    }
+
+    // אם יש קובץ קול – לנגן אותו
+    if (data.audioUrl) {
+      const audio = new Audio(data.audioUrl);
+      audio.play();
+    }
+
+  } catch (err) {
+    console.error("שגיאה בחיבור ל-n8n:", err);
+  }
+});
+
+// פונקציה שמוסיפה הודעה לצ'אט
+function addMessageToChat(sender, message) {
+  const chatWindow = document.getElementById("chat-window");
+  const msgDiv = document.createElement("div");
+  msgDiv.className = sender === "bot" ? "bot-message" : "user-message";
+  msgDiv.innerText = message;
+  chatWindow.appendChild(msgDiv);
+}
+</script>
+
 </body>
 </html>
+
