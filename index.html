@@ -105,11 +105,32 @@ const log = document.getElementById('chatLog');
 const input = document.getElementById('userInput');
 
 // Webhooks ב-n8n
-const webhookPageLoad = "https://rami.aitermi-agents.com/webhook/CHATBOT";   // קריאה בעת טעינת הדף
-const webhookMessages = "https://rami.aitermi-agents.com/webhook/CHATBOT2";  // קריאה לכל הודעה
+const webhookPageLoad = "https://rami.aitermi-agents.com/webhook/CHATBOT";
+const webhookMessages = "https://rami.aitermi-agents.com/webhook/CHATBOT2";
 
-document.getElementById('sendBtn').onclick = sendMessage;
-input.addEventListener('keypress', e => { if (e.key === "Enter") sendMessage(); });
+// שליחת הודעה (POST רגיל, בלי Proxy)
+function sendMessage() {
+  const text = input.value.trim();
+  if (!text) return;
+  appendBubble(text, 'user');
+  input.value = '';
+
+  // שימוש ב-fetch רגיל – יתקל ב-CORS, אז אפשר להסתמך על redirect רק בטעינה
+  fetch(webhookMessages, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text })
+  }).catch(()=>console.log("שגיאה בשרת, יתכן CORS"));
+}
+
+// הוספת בועה ללוג
+function appendBubble(text, type) {
+  const b = document.createElement('div');
+  b.className = 'bubble ' + type;
+  b.textContent = text;
+  log.appendChild(b);
+  log.scrollTop = log.scrollHeight;
+}
 
 // צ’ט קולי
 const recognition = ('webkitSpeechRecognition' in window) ? new webkitSpeechRecognition() : null;
@@ -124,55 +145,15 @@ if (recognition) {
   }
 }
 
-// שליחת הודעה ל-n8n
-function sendMessage() {
-  const text = input.value.trim();
-  if (!text) return;
-  appendBubble(text, 'user');
-  input.value = '';
+document.getElementById('sendBtn').onclick = sendMessage;
+input.addEventListener('keypress', e => { if (e.key === "Enter") sendMessage(); });
 
-  fetch(webhookMessages, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: text })
-  })
-    .then(res => res.json())
-    .then(data => appendBubble(data.reply || "תשובת בוט לא זמינה", "bot"))
-    .catch(err => appendBubble("שגיאה בשרת", "bot"));
-}
-
-// הוספת בועה ללוג
-function appendBubble(text, type) {
-  const b = document.createElement('div');
-  b.className = 'bubble ' + type;
-  b.textContent = text;
-  log.appendChild(b);
-  log.scrollTop = log.scrollHeight;
-}
-
-// ברגע טעינת הדף – קריאה ראשונית ל-n8n
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    const response = await fetch(webhookPageLoad, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "page_loaded" })
-    });
-
-    const data = await response.json();
-
-    if (data.reply) {
-      appendBubble(data.reply, "bot");
-    }
-
-    if (data.audioUrl) {
-      const audio = new Audio(data.audioUrl);
-      audio.play();
-    }
-
-  } catch (err) {
-    console.error("שגיאה בחיבור ל-n8n:", err);
-  }
+// ✅ redirect מיידי להפעלת ה-trigger
+document.addEventListener("DOMContentLoaded", () => {
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  iframe.src = webhookPageLoad + "?event=page_loaded";
+  document.body.appendChild(iframe);
 });
 </script>
 
